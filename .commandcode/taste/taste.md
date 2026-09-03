@@ -1,0 +1,4 @@
+- Prefers UI animations to feel smooth, fluid and natural rather than stiff/rigid — pushes back ("layout masih terlalu kaku") when the page looks static/stiff. Confidence: 0.9
+- Prefers modern and elegant UI style with subtle animated headline details like typewriting, and expects those animations to actually appear in the browser. Confidence: 0.9
+- Communicates in casual Indonesian (informal tone/slang) and expects replies in the same casual register. Confidence: 0.8
+- When reporting a UI issue, expects the fix to be verified end-to-end ("dipastikan lagi") — not just edited in source, but confirmed to render in the served app (cache/server freshness checked). Confidence: 0.6
