@@ -175,19 +175,20 @@
       <div id="basic-impact-list" class="basic-impact-grid"></div>
 
       <p>
-        Ketik makanan atau minuman, lalu sesuaikan kebiasaan konsumsinya
-        agar perkiraan dampaknya lebih relevan.
+        Ketik makanan, minuman, atau benda/kebiasaan (misal es batu, gigit kuku),
+        atur kebiasaan konsumsinya, lalu klik Analisa.
+        Kalau ada di database pakai database, kalau tidak ada otomatis pakai AI hy3:free + skor.
       </p>
 
       <form id="food-form" class="food-form">
-        <label class="sr-only" for="food-input">Nama makanan atau minuman</label>
+        <label class="sr-only" for="food-input">Nama makanan, minuman, atau benda</label>
         <input
           id="food-input"
           type="text"
-          placeholder="Contoh: cokelat, soda, apel…"
+          placeholder="Contoh: cokelat, soda, es batu, gigit kuku…"
           autocomplete="off"
         >
-        <button type="submit">Analisis Otomatis</button>
+        <button id="food-ai-button" type="submit">Analisa</button>
       </form>
 
       <div id="food-suggestions" class="food-suggestions" aria-label="Contoh makanan"></div>

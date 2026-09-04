@@ -520,10 +520,37 @@ function calculateFoodResult() {
   renderFoodResult(profile, Boolean(matched), score, level, levelClass);
 }
 
+function handleFoodAnalyze() {
+  const value = foodInput.value.trim();
+
+  if (value.length < 2) {
+    foodResultBox.innerHTML = `
+      <p><strong>Ketik dulu</strong> nama makanan, minuman, atau benda — minimal 2 huruf — baru klik Analisa.</p>
+    `;
+    show(foodResultBox);
+    return;
+  }
+
+  const matched = findFoodProfile(value);
+  if (matched) {
+    calculateFoodResult();
+    return;
+  }
+
+  analyzeFoodAI();
+}
+
 function renderFoodResult(profile, known, score, level, levelClass) {
   const traits = profile.traits
     .map((trait) => `<span>${trait}</span>`)
     .join("");
+  const searchValue = escapeHtml(foodInput.value.trim());
+  const aiFallback = known ? "" : `
+    <div class="food-ai-fallback">
+      <p>🔍 "<strong>${searchValue}</strong>" belum ada di database. Mau AI hy3:free yang analisa + kasih skor bahaya?</p>
+      <button type="button" id="food-ai-fallback-btn">✨ Analisa "${searchValue}" dengan AI</button>
+    </div>
+  `;
 
   foodResultBox.innerHTML = `
     <div class="food-result-head">
@@ -545,6 +572,7 @@ function renderFoodResult(profile, known, score, level, levelClass) {
     <div class="trait-list">${traits}</div>
     <p><strong>Efek ke gigi:</strong> ${profile.effect}</p>
     <p><strong>Saran:</strong> ${profile.tip}</p>
+    ${aiFallback}
     <p class="result-note">
       Skor ini adalah perkiraan edukasi berdasarkan jenis makanan dan
       kebiasaan konsumsi, bukan pemeriksaan atau diagnosis dokter gigi.
@@ -552,6 +580,228 @@ function renderFoodResult(profile, known, score, level, levelClass) {
   `;
 
   show(foodResultBox);
+
+  if (!known) {
+    const fallbackBtn = document.getElementById("food-ai-fallback-btn");
+    if (fallbackBtn) {
+      fallbackBtn.addEventListener("click", analyzeFoodAI);
+    }
+  }
+}
+
+const FOOD_AI_STEPS = [
+  "AI membaca input kamu…",
+  "AI mengecek bahaya ke gigi…",
+  "AI menyusun skor 0-100…",
+  "AI menulis saran aman…"
+];
+
+let foodAiStepTimer = null;
+let foodAiLoading = false;
+
+function stopFoodThinking() {
+  if (foodAiStepTimer) window.clearInterval(foodAiStepTimer);
+  foodAiStepTimer = null;
+}
+
+function showFoodThinking() {
+  let stepIndex = 0;
+
+  foodResultBox.innerHTML = `
+    <div class="food-result-head">
+      <span>🤖</span>
+      <div>
+        <small>AI hy3:free</small>
+        <h3>Makanan sedang dianalisa…</h3>
+      </div>
+    </div>
+    <div class="ai-scan food-thinking" aria-hidden="true">
+      <div class="ai-orbs"><i></i><i></i><i></i></div>
+      <div class="ai-ring"></div>
+      <div class="ai-ring delay"></div>
+      <div class="ai-scan-bar"></div>
+      <span class="ai-tooth">🍎</span>
+    </div>
+    <p id="food-ai-step" class="ai-step-text loading">${FOOD_AI_STEPS[0]}</p>
+    <div class="risk-meter ai-progress-track"><span class="medium ai-progress"></span></div>
+    <p class="result-note">AI sedang menilai bahaya ke gigi + menyusun skor 0-100. Jangan tutup halaman ini.</p>
+  `;
+  show(foodResultBox);
+
+  const stepEl = document.getElementById("food-ai-step");
+  if (foodAiStepTimer) window.clearInterval(foodAiStepTimer);
+  foodAiStepTimer = window.setInterval(function () {
+    if (stepEl) {
+      stepEl.classList.add("swap");
+      window.setTimeout(function () {
+        stepIndex = (stepIndex + 1) % FOOD_AI_STEPS.length;
+        stepEl.textContent = FOOD_AI_STEPS[stepIndex];
+        stepEl.classList.remove("swap");
+      }, 220);
+    }
+  }, 1600);
+}
+
+function foodRiskLevel(score) {
+  if (score == null) return { label: "Selesai dianalisa", levelClass: "medium" };
+  if (score <= 20) return { label: "Risiko rendah", levelClass: "low" };
+  if (score < 40) return { label: "Risiko sedang", levelClass: "medium" };
+  if (score < 70) return { label: "Risiko tinggi", levelClass: "high" };
+  return { label: "Risiko sangat tinggi", levelClass: "very-high" };
+}
+
+function parseFoodAi(text) {
+  const raw = String(text || "");
+  const clean = function (s) {
+    return String(s || "")
+      .replace(/^[\s:–-]+/, "")
+      .trim();
+  };
+  const efekMatch = raw.match(/EFEK\s*:([\s\S]*?)(?=SKOR\s*:|SARAN\s*:|$)/i);
+  const saranMatch = raw.match(/SARAN\s*:([\s\S]*?)(?=Ini edukasi|$)/i);
+  return {
+    efek: clean(efekMatch ? efekMatch[1] : ""),
+    saran: clean(saranMatch ? saranMatch[1] : "")
+  };
+}
+
+function renderFoodAiReport(value, dbProfile, dbKnown, aiResult, aiScore) {
+  const level = foodRiskLevel(aiScore);
+  const parsed = parseFoodAi(aiResult);
+  const safeValue = escapeHtml(value);
+  const efekHtml = parsed.efek
+    ? escapeHtml(parsed.efek).replace(/\n/g, "<br>")
+    : escapeHtml(aiResult).replace(/\n/g, "<br>");
+  const saranHtml = parsed.saran
+    ? escapeHtml(parsed.saran).replace(/\n/g, "<br>")
+    : "";
+  const saranBlock = saranHtml
+    ? `<div class="ai-section"><h4>💡 Saran biar aman</h4><p>${saranHtml}</p></div>`
+    : "";
+  const dbText = dbKnown
+    ? `${dbProfile.title} — ${dbProfile.effect}`
+    : "belum ada di database, jadi penilaian penuh dari AI.";
+
+  foodResultBox.innerHTML = `
+    <div class="food-result-head">
+      <span>🤖</span>
+      <div>
+        <small>Hasil AI hy3:free · "${safeValue}"</small>
+        <h3>Analisa selesai</h3>
+      </div>
+    </div>
+    <div class="food-ai-score-hero ${level.levelClass}">
+      <div class="score-circle ${level.levelClass}">${aiScore == null ? "?" : aiScore}</div>
+      <div class="score-meta">
+        <small>Skor bahaya ke gigi · 0 aman – 100 bahaya</small>
+        <strong><span class="risk-label ${level.levelClass}">${aiScore == null ? level.label : aiScore + "/100 · " + level.label}</span></strong>
+      </div>
+    </div>
+    <div class="risk-meter" aria-label="Skor bahaya AI ${aiScore == null ? "" : aiScore + " dari 100"}">
+      <span class="${level.levelClass}" style="width: ${aiScore == null ? 100 : aiScore}%"></span>
+    </div>
+    <div class="ai-sections">
+      <div class="ai-section"><h4>🦷 Efek ke gigi</h4><p>${efekHtml}</p></div>
+      ${saranBlock}
+      <div class="ai-section db"><h4>📚 Database</h4><p>${escapeHtml(dbText)}</p></div>
+    </div>
+    <p class="result-note">
+      <strong>Ini edukasi, bukan diagnosis dokter gigi.</strong>
+      Skor 0 = aman, 100 = sangat berbahaya bagi gigi.
+    </p>
+  `;
+  foodResultBox.classList.remove("anim-in");
+  void foodResultBox.offsetWidth;
+  foodResultBox.classList.add("anim-in");
+  show(foodResultBox);
+}
+
+async function analyzeFoodAI() {
+  const value = foodInput.value.trim();
+  const button = document.getElementById("food-ai-button");
+
+  if (value.length < 2) {
+    foodResultBox.innerHTML = `
+      <p><strong>Ketik dulu</strong> nama makanan, minuman, atau benda — minimal 2 huruf — baru klik ✨ Analisa AI.</p>
+    `;
+    show(foodResultBox);
+    return;
+  }
+
+  if (foodAiLoading) return;
+  foodAiLoading = true;
+  if (button) {
+    button.disabled = true;
+    button.textContent = "⏳ AI thinking…";
+  }
+  showFoodThinking();
+
+  try {
+    const controller = new AbortController();
+    const foodTimeout = window.setTimeout(function () {
+      controller.abort();
+    }, 65000);
+
+    const response = await fetch("/api/food", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        food: value,
+        frequency: frequencyInput.value,
+        sugar: sugarInput.value,
+        timing: timingInput.value
+      }),
+      signal: controller.signal
+    });
+
+    window.clearTimeout(foodTimeout);
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.status === 404) {
+      throw new Error(
+        "Endpoint /api/food tidak ketemu. Restart node server.js, atau redeploy Vercel biar api/food.js ikut naik."
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI makanan gagal menjawab.");
+    }
+
+    stopFoodThinking();
+    const matched = findFoodProfile(value);
+    const fallbackProfile = matched || { title: "Belum ada data", effect: "AI yang menilai penuh." };
+    renderFoodAiReport(value, fallbackProfile, Boolean(matched), data.result, data.score);
+  } catch (error) {
+    stopFoodThinking();
+    const isAbort = error && error.name === "AbortError";
+    const isFetchFail =
+      error instanceof TypeError ||
+      String((error && error.message) || "").includes("Failed to fetch");
+    const message = isAbort
+      ? "AI kelamaan jawab (timeout 65 detik). Coba lagi."
+      : isFetchFail
+        ? "Tidak bisa nyambung ke server. Pastikan localhost:3000 nyala (node server.js) kalau buka lokal, atau tunggu redeploy Vercel selesai."
+        : error.message || "Coba lagi.";
+    foodResultBox.innerHTML = `
+      <div class="food-result-head">
+        <span>⚠️</span>
+        <div>
+          <small>Gagal</small>
+          <h3>AI gagal menjawab</h3>
+        </div>
+      </div>
+      <p>${escapeHtml(message)}</p>
+      <p class="result-note">Hasil database tetap muncul otomatis saat kamu mengetik di kolom.</p>
+    `;
+    show(foodResultBox);
+  } finally {
+    foodAiLoading = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = "✨ Analisa AI + Skor";
+    }
+  }
 }
 
 function renderBasicImpacts() {
@@ -587,7 +837,8 @@ function renderFoodSuggestions() {
 
     button.addEventListener("click", function () {
       foodInput.value = suggestion;
-      calculateFoodResult();
+      hide(foodResultBox);
+      handleFoodAnalyze();
     });
 
     container.append(button);
@@ -610,13 +861,21 @@ uploadInput.addEventListener("change", function (event) {
 
 foodForm.addEventListener("submit", function (event) {
   event.preventDefault();
-  calculateFoodResult();
+  handleFoodAnalyze();
 });
 
-foodInput.addEventListener("input", calculateFoodResult);
-frequencyInput.addEventListener("change", calculateFoodResult);
-sugarInput.addEventListener("change", calculateFoodResult);
-timingInput.addEventListener("change", calculateFoodResult);
+foodInput.addEventListener("input", function () {
+  hide(foodResultBox);
+});
+frequencyInput.addEventListener("change", function () {
+  hide(foodResultBox);
+});
+sugarInput.addEventListener("change", function () {
+  hide(foodResultBox);
+});
+timingInput.addEventListener("change", function () {
+  hide(foodResultBox);
+});
 
 window.addEventListener("beforeunload", stopCamera);
 

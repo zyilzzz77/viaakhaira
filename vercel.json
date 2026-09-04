@@ -8,6 +8,10 @@
       "dest": "/api/analyze.js"
     },
     {
+      "src": "/api/food",
+      "dest": "/api/food.js"
+    },
+    {
       "src": "/server.js",
       "dest": "/index.html"
     },

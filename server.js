@@ -127,6 +127,85 @@ async function handleAnalyze(req, res) {
   }
 }
 
+async function handleFood(req, res) {
+  const apiKey = process.env.KENARI_API_KEY;
+  if (!apiKey) {
+    return sendJson(res, 500, { error: "KENARI_API_KEY belum ada di .env" });
+  }
+
+  let payload = {};
+  try {
+    payload = JSON.parse(await readBody(req));
+  } catch {
+    return sendJson(res, 400, { error: "Body JSON tidak valid." });
+  }
+
+  const food = payload.food;
+  if (typeof food !== "string" || food.trim().length < 2) {
+    return sendJson(res, 400, { error: "Nama makanan/minuman/benda belum jelas." });
+  }
+  if (food.length > 200) {
+    return sendJson(res, 400, { error: "Nama terlalu panjang. Singkatkan dulu." });
+  }
+
+  const prompt =
+    "Kamu asisten edukasi kesehatan gigi. Bahasa Indonesia santai dan singkat. " +
+    `Pengguna menanyakan: "${food.trim()}" ` +
+    `(frekuensi: ${payload.frequency || "tidak diketahui"}, tambahan gula: ${payload.sugar || "tidak diketahui"}, waktu konsumsi: ${payload.timing || "tidak diketahui"}). ` +
+    "Ini bisa berupa makanan, minuman, atau benda/kebiasaan (misal es batu, kuku, pulpen, merokok). " +
+    "JANGAN tampilkan proses berpikirmu. Langsung jawab final dengan format persis ini: " +
+    "EFEK: 1-2 kalimat efek ke gigi (karies, erosi email, noda, patah/retak, luka gusi). " +
+    "SKOR: angka 0-100 (0 = aman, 100 = sangat berbahaya bagi gigi) + label risiko (rendah/sedang/tinggi/sangat tinggi). " +
+    "SARAN: 2 saran singkat agar lebih aman. " +
+    "Tutup dengan: Ini edukasi, bukan diagnosis dokter gigi.";
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch("https://kenari.id/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "hy3:free",
+        max_tokens: 700,
+        temperature: 0.4,
+        reasoning_effort: "low",
+        messages: [{ role: "user", content: prompt }]
+      }),
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return sendJson(res, 502, {
+        error: "AI makanan gagal menjawab. Coba lagi sebentar.",
+        detail: detail.slice(0, 300)
+      });
+    }
+
+    const data = await response.json();
+    const foodMessage = data?.choices?.[0]?.message;
+    const foodContent = foodMessage?.content || foodMessage?.reasoning_content || foodMessage?.reasoning;
+    if (!foodContent || !String(foodContent).match(/SKOR|EFEK/i)) {
+      return sendJson(res, 502, {
+        error: "AI tidak mengembalikan hasil. Coba kata kunci lain."
+      });
+    }
+
+    const match = String(foodContent).match(/SKOR\s*:?\s*(\d{1,3})/i);
+    const score = match ? Math.max(0, Math.min(100, Number(match[1]))) : null;
+    return sendJson(res, 200, { result: foodContent, score });
+  } catch {
+    return sendJson(res, 502, { error: "Koneksi ke AI gagal atau timeout. Coba lagi." });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://localhost");
 
@@ -135,6 +214,13 @@ const server = http.createServer((req, res) => {
       return sendJson(res, 405, { error: "Gunakan POST untuk analisa foto." });
     }
     return handleAnalyze(req, res);
+  }
+
+  if (url.pathname === "/api/food") {
+    if (req.method !== "POST") {
+      return sendJson(res, 405, { error: "Gunakan POST untuk analisa makanan." });
+    }
+    return handleFood(req, res);
   }
 
   let filePath = path.join(root, decodeURIComponent(url.pathname));

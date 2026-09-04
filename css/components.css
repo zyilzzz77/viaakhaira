@@ -700,6 +700,130 @@ select:focus-visible {
   font-size: 0.82rem;
 }
 
+.food-ai-fallback {
+  margin: 0.9rem 0 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed #72bdd9;
+  border-radius: 14px;
+  background: #f2fbfe;
+}
+
+.food-ai-fallback p {
+  margin: 0 0 0.6rem;
+  color: #315c6d;
+}
+
+.food-ai-fallback button {
+  width: 100%;
+}
+
+.food-ai-score-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.85rem 0 0.7rem;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: #f7fdff;
+  border: 1px solid #c7e7ef;
+}
+
+.score-circle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 74px;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.score-circle.low {
+  background: linear-gradient(135deg, #2fa866, #16663a);
+}
+
+.score-circle.medium {
+  background: linear-gradient(135deg, #e3ad23, #a97a00);
+}
+
+.score-circle.high {
+  background: linear-gradient(135deg, #e77b27, #a85400);
+}
+
+.score-circle.very-high {
+  background: linear-gradient(135deg, #e05252, #992b2b);
+  animation: score-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes score-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+.score-meta {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.score-meta small {
+  color: #5b7480;
+}
+
+.score-meta .risk-label {
+  margin-left: 0;
+}
+
+.ai-sections {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.ai-section {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #c7e7ef;
+  border-radius: 12px;
+  background: var(--white);
+  line-height: 1.65;
+}
+
+.ai-section h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.ai-section p {
+  margin: 0;
+  color: #365966;
+}
+
+.ai-section.db {
+  background: #f7fdff;
+}
+
+.food-result.anim-in {
+  animation: food-pop 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes food-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .result-note {
   margin-top: 0.8rem;
   padding-top: 0.75rem;
