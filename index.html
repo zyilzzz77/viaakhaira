@@ -6,20 +6,57 @@
   <meta name="description" content="Website edukasi perawatan gigi Klinik Gigi Virdya.">
   <title>Klinik Gigi Virdya</title>
 
-  <link rel="stylesheet" href="css/base.css?v=3">
-  <link rel="stylesheet" href="css/components.css?v=3">
-  <link rel="stylesheet" href="css/responsive.css?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/base.css?v=8">
+  <link rel="stylesheet" href="css/components.css?v=8">
+  <link rel="stylesheet" href="css/responsive.css?v=8">
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-inner">
-      <div class="tooth-mark" aria-hidden="true">🦷</div>
-      <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Klinik Gigi Virdya</p>
-      <h1 aria-label="Rawat gigi, rawat hal yang paling penting"><span id="typewriter" aria-hidden="true">Rawat gigi, rawat hal yang paling penting</span><span class="caret" aria-hidden="true"></span></h1>
-      <p class="byline"><strong>Virdya Khaira Putri</strong><span aria-hidden="true"> · </span>SMKN 69 Jakarta</p>
-      <div class="hero-cta">
-        <a class="hero-btn" href="#analisa">Analisa Gigi Sekarang</a>
-        <a class="hero-btn ghost" href="#cek-makanan">Cek Makanan</a>
+  <nav class="navbar">
+    <a class="brand" href="#top">
+      <svg class="brand-tooth" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 5.5c-1.4-1.9-3.4-2.9-5.5-2.7-2.5.2-4.2 2-3.9 4.7.2 2.1 1.4 3.5 2 5.5.5 1.7.7 3.6 1 5.4.1.9.5 2.6 1.7 2.6 1.4 0 1.2-2.1 1.3-3.1.1-1.2.4-2.7 1.4-3.6.4-.4 1-.6 1.5-.4.3.1.5.3.5.3s.2-.2.5-.3c.5-.2 1.1 0 1.5.4 1 .9 1.3 2.4 1.4 3.6.1 1-.1 3.1 1.3 3.1 1.2 0 1.6-1.7 1.7-2.6.3-1.8.5-3.7 1-5.4.6-2 1.8-3.4 2-5.5.3-2.7-1.4-4.5-3.9-4.7-2.1-.2-4.1.8-5.5 2.7Z" stroke="#157A9B" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+      <span>Klinik Gigi Virdya</span>
+    </a>
+    <div class="nav-links">
+      <a href="#analisa">Analisa</a>
+      <a href="#cek-makanan">Makanan</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <h1 aria-label="Rawat kesehatan gigi dengan lebih mudah"><span id="typewriter" aria-hidden="true">Rawat kesehatan gigi dengan lebih mudah.</span><span class="caret" aria-hidden="true"></span></h1>
+        <p class="hero-sub">
+          Analisa kondisi gigi dan pelajari pengaruh makanan terhadap
+          kesehatan gigi melalui pemeriksaan sederhana.
+        </p>
+        <div class="hero-cta">
+          <a class="hero-btn" href="#analisa">Analisa Gigi</a>
+          <a class="hero-link" href="#cek-makanan">Cek makanan <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="hero-credit">
+          Project by<br>
+          <strong>Virdya Khaira Putri</strong><br>
+          SMKN 69 Jakarta
+        </p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <svg class="hero-tooth" viewBox="0 0 200 200" fill="none" role="presentation">
+          <circle cx="100" cy="100" r="86" fill="#DDF2F7"/>
+          <circle cx="152" cy="52" r="26" fill="#EAF7FA"/>
+          <path d="M100 62c-9-12-22-18-35-17-16 1-27 13-25 30 1 13 9 22 13 35 3 11 4 23 6 34 1 6 3 17 11 17 9 0 8-13 8-20 1-8 3-17 9-23 3-2 7-3 10-2 2 0 3 1 3 1s1-1 3-1c3-1 7 0 10 2 6 6 8 15 9 23 0 7-1 20 8 20 8 0 10-11 11-17 2-11 3-23 6-34 4-13 12-22 13-35 2-17-9-29-25-30-13-1-26 5-35 17Z" fill="#FFFFFF" stroke="#157A9B" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M82 96c2 8 8 14 18 14s16-6 18-14" stroke="#DDF2F7" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+        <ul class="hero-points">
+          <li><strong>Skrining edukasi</strong><span>Bukan diagnosis dokter</span></li>
+          <li><strong>Database + AI</strong><span>Cek makanan cepat</span></li>
+        </ul>
       </div>
     </div>
   </header>
@@ -31,38 +68,38 @@
       Diagnosis membutuhkan pemeriksaan dokter gigi dan, bila diperlukan, foto rontgen.
     </section>
 
-    <section class="card" id="analisa">
-      <div class="section-heading">
-        <span aria-hidden="true">📸</span>
-        <div>
-          <p class="kicker">Pemeriksaan awal AI</p>
-          <h2>Analisa Foto Gigi</h2>
-        </div>
-      </div>
+    <section class="card card-flat" id="analisa">
+      <p class="eyebrow-small">Pemeriksaan foto</p>
+      <h2 class="section-title">Analisa Foto Gigi</h2>
 
-      <p>
-        Ambil foto dengan kamera atau pilih gambar dari perangkat.
-        Klik Analisa dengan AI untuk skor kebersihan gigi dan saran edukasi.
-        Foto hanya dikirim ke AI saat kamu klik analisa.
+      <p class="section-desc">
+        Ambil foto gigi menggunakan kamera atau pilih foto dari perangkat.
+        AI akan memberikan estimasi visual dan saran perawatan dasar.
       </p>
 
-      <div class="camera-stage">
+      <div class="camera-stage" data-state="empty">
         <video id="camera" autoplay playsinline muted></video>
         <canvas id="photo-canvas"></canvas>
 
         <div id="camera-placeholder" class="camera-placeholder">
-          <span aria-hidden="true">🦷</span>
-          <p>Gunakan kamera atau pilih foto dari galeri</p>
+          <svg class="stage-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5B6B73" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <p class="stage-title">Belum ada foto yang dipilih</p>
+          <p class="stage-meta">Format JPG/PNG · Maks. 10 MB</p>
         </div>
+
+        <p class="stage-badge hidden" id="stage-badge">Pratinjau foto</p>
       </div>
 
       <p id="photo-name" class="photo-name hidden"></p>
 
-      <div class="actions">
+      <div class="actions actions-split">
         <button id="start-camera" type="button">Nyalakan Kamera</button>
 
         <label class="upload-button">
-          Pilih Foto dari Galeri
+          Pilih dari Galeri
           <input
             id="photo-upload"
             type="file"
@@ -75,7 +112,7 @@
         </button>
 
         <button id="analyze-photo" class="hidden" type="button">
-          ✨ Analisa dengan AI
+          Analisa dengan AI
         </button>
 
         <button id="reset-photo" class="secondary-button hidden" type="button">
@@ -83,8 +120,14 @@
         </button>
       </div>
 
+      <p class="secure-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Foto diproses hanya saat kamu memulai analisis.
+      </p>
+
       <p id="camera-error" class="error hidden" role="alert"></p>
       <div id="photo-result" class="result hidden" aria-live="polite"></div>
+      <p class="disclaimer">Hasil AI bersifat informatif dan bukan pengganti pemeriksaan dokter gigi.</p>
     </section>
 
     <section class="card">
@@ -127,111 +170,128 @@
       </div>
     </section>
 
-    <section class="card">
-      <div class="section-heading">
-        <span aria-hidden="true">🪥</span>
-        <div>
-          <p class="kicker">Kebiasaan harian</p>
-          <h2>Rekomendasi &amp; Jadwal</h2>
-        </div>
-      </div>
+    <section class="card card-compact">
+      <p class="eyebrow-small">Kebiasaan harian</p>
+      <h2 class="section-title section-title-sm">Rekomendasi &amp; Jadwal</h2>
+      <p class="section-desc section-desc-sm">Panduan dasar untuk menjaga kebersihan gigi setiap hari.</p>
 
       <div class="recommend-grid">
-        <article>
-          <span aria-hidden="true">🧴</span>
+        <article class="accent-pink">
+          <span class="rec-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2585AD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+          </span>
           <div>
-            <h3>Pasta gigi</h3>
-            <p>Pilih yang mengandung fluoride. Untuk gigi sensitif, tanyakan produk yang sesuai kepada dokter gigi.</p>
+            <div class="rec-head">
+              <h3>Pasta gigi</h3>
+              <span class="rec-tag">Disarankan</span>
+            </div>
+            <p>Pilih pasta gigi berfluoride untuk membantu menjaga enamel gigi. Jika gigi sensitif, gunakan produk khusus sesuai saran dokter gigi.</p>
           </div>
         </article>
 
-        <article>
-          <span aria-hidden="true">🪥</span>
+        <article class="accent-blue">
+          <span class="rec-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2585AD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3l6 6-9.5 9.5a2.1 2.1 0 0 1-3-3L18 6"/><path d="M9 12L4.5 16.5a2.1 2.1 0 0 0 3 3L12 15"/><path d="M15 3l1.5-1.5L22 7 20.5 8.5"/></svg>
+          </span>
           <div>
-            <h3>Sikat gigi</h3>
-            <p>Gunakan bulu lembut dan kepala kecil. Ganti sekitar tiga bulan sekali atau saat bulu rusak.</p>
+            <div class="rec-head">
+              <h3>Sikat gigi</h3>
+              <span class="rec-tag">Dasar</span>
+            </div>
+            <p>Gunakan sikat berbulu lembut dengan kepala kecil agar nyaman menjangkau seluruh area gigi. Ganti setiap 3 bulan atau saat bulu mulai rusak.</p>
           </div>
         </article>
 
-        <article>
-          <span aria-hidden="true">⏱️</span>
+        <article class="accent-purple">
+          <span class="rec-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2585AD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </span>
           <div>
-            <h3>Waktu terbaik</h3>
-            <p>Sikat dua kali sehari selama dua menit: pagi dan malam sebelum tidur.</p>
+            <div class="rec-head">
+              <h3>Waktu terbaik</h3>
+              <span class="rec-tag">Harian</span>
+            </div>
+            <p>Sikat gigi 2 kali sehari selama 2 menit, terutama setelah sarapan dan sebelum tidur.</p>
           </div>
         </article>
       </div>
     </section>
 
-    <section class="card" id="cek-makanan">
-      <div class="section-heading">
-        <span aria-hidden="true">🍎</span>
-        <div>
-          <p class="kicker">Cari cepat</p>
-          <h2>Cek Efek Makanan ke Gigi</h2>
-        </div>
-      </div>
-
-      <div id="basic-impact-list" class="basic-impact-grid"></div>
-
-      <p>
-        Ketik makanan, minuman, atau benda/kebiasaan (misal es batu, gigit kuku),
-        atur kebiasaan konsumsinya, lalu klik Analisa.
-        Kalau ada di database pakai database, kalau tidak ada otomatis pakai AI hy3:free + skor.
+    <section class="card card-compact" id="cek-makanan">
+      <p class="eyebrow-small eyebrow-with-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+        Cari cepat
+      </p>
+      <h2 class="section-title section-title-sm">Cek Efek Makanan ke Gigi</h2>
+      <p class="section-desc section-desc-sm">
+        Cari tahu bagaimana makanan, minuman, atau kebiasaan
+        tertentu dapat memengaruhi kesehatan gigi.
       </p>
 
       <form id="food-form" class="food-form">
-        <label class="sr-only" for="food-input">Nama makanan, minuman, atau benda</label>
+        <label class="sr-only" for="food-input">Makanan, minuman, atau kebiasaan</label>
         <input
           id="food-input"
           type="text"
-          placeholder="Contoh: cokelat, soda, es batu, gigit kuku…"
+          placeholder="Makanan, minuman, atau kebiasaan..."
           autocomplete="off"
         >
-        <button id="food-ai-button" type="submit">Analisa</button>
+        <button id="food-ai-button" type="submit">Cek efek</button>
       </form>
 
-      <div id="food-suggestions" class="food-suggestions" aria-label="Contoh makanan"></div>
-
-      <div class="analysis-options">
-        <label>
-          <span>Frekuensi konsumsi</span>
-          <select id="frequency">
-            <option value="jarang">Jarang / sesekali</option>
-            <option value="harian">Sekitar 1× sehari</option>
-            <option value="sering">Sering dalam sehari</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Ada tambahan gula?</span>
-          <select id="sugar">
-            <option value="tidak_tahu">Tidak tahu</option>
-            <option value="tidak">Tidak</option>
-            <option value="ya">Ya</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Biasanya dikonsumsi</span>
-          <select id="timing">
-            <option value="bersama_makan">Bersama waktu makan</option>
-            <option value="selingan">Di sela waktu makan</option>
-          </select>
-        </label>
+      <div class="quick-row">
+        <span class="quick-label">Coba cepat:</span>
+        <div id="food-suggestions" class="food-suggestions" aria-label="Contoh makanan"></div>
       </div>
 
+      <fieldset class="habit-group">
+        <legend>Kebiasaan konsumsi</legend>
+        <div class="analysis-options">
+          <label>
+            <span>Frekuensi</span>
+            <select id="frequency">
+              <option value="jarang">Jarang / sesekali</option>
+              <option value="harian">Sekitar 1× sehari</option>
+              <option value="sering">Sering dalam sehari</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Tambahan gula</span>
+            <select id="sugar">
+              <option value="tidak_tahu">Tidak tahu</option>
+              <option value="tidak">Tidak</option>
+              <option value="ya">Ya</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Waktu konsumsi</span>
+            <select id="timing">
+              <option value="bersama_makan">Bersama waktu makan</option>
+              <option value="selingan">Di sela waktu makan</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
       <div id="food-result" class="food-result hidden" aria-live="polite"></div>
+
+      <div class="food-examples">
+        <h3>Contoh umum</h3>
+        <div id="basic-impact-list" class="food-example-list"></div>
+      </div>
     </section>
   </main>
 
   <footer>
-    <div aria-hidden="true">🦷</div>
-    <h2>Rawat gigi, rawat hal yang paling penting</h2>
-    <p>Dikembangkan oleh <strong>Virdya Khaira Putri</strong> · SMKN 69 Jakarta</p>
+    <div class="footer-inner">
+      <h2>Klinik Gigi Virdya</h2>
+      <p>Project by Virdya Khaira Putri · SMKN 69 Jakarta</p>
+    </div>
   </footer>
 
-  <script src="js/food-data.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/food-data.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

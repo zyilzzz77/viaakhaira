@@ -19,8 +19,25 @@ const sugarInput = document.getElementById("sugar");
 const timingInput = document.getElementById("timing");
 const foodResultBox = document.getElementById("food-result");
 
+const cameraStage = document.querySelector(".camera-stage");
+const stageBadge = document.getElementById("stage-badge");
+
 let cameraStream = null;
 let photoSource = null;
+
+function setStageState(state, badgeText) {
+  if (cameraStage) {
+    cameraStage.setAttribute("data-state", state);
+  }
+  if (stageBadge) {
+    if (badgeText) {
+      stageBadge.textContent = badgeText;
+      show(stageBadge);
+    } else {
+      hide(stageBadge);
+    }
+  }
+}
 
 function show(element) {
   element.classList.remove("hidden");
@@ -62,6 +79,7 @@ async function startCamera() {
     camera.srcObject = cameraStream;
     photoSource = "camera";
 
+    setStageState("live", "Kamera aktif");
     show(camera);
     hide(canvas);
     canvas.classList.remove("visible");
@@ -72,6 +90,7 @@ async function startCamera() {
     hide(resetButton);
     hide(photoResult);
   } catch (error) {
+    setStageState("empty");
     showError("Kamera tidak dapat diakses. Pastikan izin kamera sudah diberikan di browser.");
   }
 }
@@ -84,6 +103,7 @@ function capturePhoto() {
   context.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
   camera.pause();
+  setStageState("selected", "Foto dari kamera");
   hide(camera);
   show(canvas);
   canvas.classList.add("visible");
@@ -100,8 +120,8 @@ function loadUploadedPhoto(file) {
     return;
   }
 
-  if (file.size > 8 * 1024 * 1024) {
-    showError("Ukuran foto terlalu besar. Pilih file maksimal 8 MB.");
+  if (file.size > 10 * 1024 * 1024) {
+    showError("Ukuran foto terlalu besar. Pilih file maksimal 10 MB.");
     return;
   }
 
@@ -122,6 +142,7 @@ function loadUploadedPhoto(file) {
     photoSource = "upload";
     photoName.textContent = `Foto dipilih: ${file.name}`;
 
+    setStageState("selected", "Foto dari galeri");
     clearError();
     hide(camera);
     hide(placeholder);
@@ -145,27 +166,24 @@ function loadUploadedPhoto(file) {
 }
 
 function resetPhoto() {
+  stopCamera();
   hide(canvas);
   canvas.classList.remove("visible");
+  hide(camera);
   hide(photoResult);
   hide(photoName);
   hide(analyzeButton);
   hide(resetButton);
+  hide(captureButton);
   clearError();
+  setStageState("empty");
   analyzeButton.disabled = false;
-  analyzeButton.textContent = "✨ Analisa dengan AI";
+  analyzeButton.textContent = "Analisa dengan AI";
 
   photoName.textContent = "";
-
-  if (photoSource === "camera" && cameraStream) {
-    camera.play();
-    show(camera);
-    show(captureButton);
-  } else {
-    photoSource = null;
-    show(placeholder);
-    show(startCameraButton);
-  }
+  photoSource = null;
+  show(placeholder);
+  show(startCameraButton);
 }
 
 function inspectPhotoQuality() {
@@ -279,9 +297,9 @@ function inspectPhotoQuality() {
 const AI_STEPS = [
   "Menyiapkan foto…",
   "Mendeteksi area gigi…",
-  "Membaca warna & plak (OCR visual)…",
-  "Menilai kebersihan gigi…",
-  "Menyusun skor & saran…"
+  "Membaca warna dan permukaan gigi…",
+  "Menyusun estimasi visual…",
+  "Menyiapkan saran perawatan dasar…"
 ];
 
 let aiStepTimer = null;
@@ -297,15 +315,16 @@ function escapeHtml(value) {
 
 function showAnalyzing() {
   let stepIndex = 0;
+  setStageState("analyzing", "Menganalisis…");
 
   photoResult.innerHTML = `
-    <h3>🤖 AI sedang menganalisa…</h3>
-    <div class="ai-scan" aria-hidden="true">
-      <div class="ai-orbs"><i></i><i></i><i></i></div>
-      <div class="ai-ring"></div>
-      <div class="ai-ring delay"></div>
+    <h3>Menganalisis foto…</h3>
+    <div class="ai-scan photo-thinking" aria-hidden="true">
       <div class="ai-scan-bar"></div>
-      <span class="ai-tooth">🦷</span>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1E7195" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
     </div>
     <p id="ai-step" class="ai-step-text loading">${AI_STEPS[0]}</p>
     <div class="risk-meter ai-progress-track"><span class="medium ai-progress"></span></div>
@@ -333,31 +352,32 @@ function stopAnalyzing() {
 }
 
 function scoreLevel(score) {
-  if (score == null) return { label: "Skrining selesai", levelClass: "medium" };
-  if (score >= 78) return { label: "Baik", levelClass: "low" };
+  if (score == null) return { label: "Estimasi selesai", levelClass: "medium" };
+  if (score >= 78) return { label: "Tampak baik", levelClass: "low" };
   if (score >= 55) return { label: "Cukup", levelClass: "medium" };
   if (score >= 35) return { label: "Perlu perhatian", levelClass: "high" };
-  return { label: "Segera ke dokter gigi", levelClass: "very-high" };
+  return { label: "Disarankan ke dokter gigi", levelClass: "very-high" };
 }
 
 function renderAiReport(result, score) {
   const level = scoreLevel(score);
   const safeText = escapeHtml(result).replace(/\n/g, "<br>");
 
+  setStageState("done", "Hasil siap");
   photoResult.innerHTML = `
-    <h3>🦷 Hasil Analisa AI</h3>
+    <h3>Hasil estimasi visual</h3>
     <div class="quality-summary">
       <strong>
-        Skor kebersihan:
+        Estimasi kondisi visual:
         <span class="risk-label ${level.levelClass}">${score == null ? level.label : score + "/100 · " + level.label}</span>
       </strong>
     </div>
-    <div class="risk-meter" aria-label="Skor kebersihan gigi ${score == null ? "" : score + " dari 100"}">
+    <div class="risk-meter" aria-label="Estimasi kondisi visual gigi ${score == null ? "" : score + " dari 100"}">
       <span class="${level.levelClass}" style="width: ${score == null ? 100 : score}%"></span>
     </div>
     <div class="ai-result-text">${safeText}</div>
     <p class="result-note">
-      <strong>Ini skrining edukasi, bukan diagnosis dokter gigi.</strong>
+      <strong>Indikasi awal dari foto, bukan diagnosis.</strong>
       Jika ada nyeri, bengkak, perdarahan gusi, lubang, atau bercak yang menetap,
       periksakan langsung ke dokter gigi.
     </p>
@@ -374,13 +394,14 @@ async function analyzePhoto() {
 
   const quality = inspectPhotoQuality();
   if (quality.score < 40) {
+    setStageState("selected", "Foto perlu diperbaiki");
     renderPhotoReport(quality);
     showError("Foto terlalu gelap/buram. Perbaiki pencahayaan lalu klik Analisa dengan AI lagi.");
     return;
   }
 
   analyzeButton.disabled = true;
-  analyzeButton.textContent = "⏳ Menganalisa…";
+  analyzeButton.textContent = "Menganalisis…";
   showAnalyzing();
 
   try {
@@ -401,18 +422,19 @@ async function analyzePhoto() {
     renderAiReport(data.result, data.score);
   } catch (error) {
     stopAnalyzing();
+    setStageState("selected", "Foto siap");
     showError(error.message || "AI gagal menganalisa foto. Coba lagi.");
     hide(photoResult);
   } finally {
     analyzeButton.disabled = false;
-    analyzeButton.textContent = "✨ Analisa dengan AI";
+    analyzeButton.textContent = "Analisa dengan AI";
   }
 }
 
 function runPhotoCheck() {
   photoResult.innerHTML = `
     <h3>Foto siap</h3>
-    <p>Klik <strong>✨ Analisa dengan AI</strong> untuk skor kebersihan gigi dan saran.</p>
+    <p>Klik <strong>Analisa dengan AI</strong> untuk estimasi kondisi visual dan saran perawatan dasar.</p>
   `;
   show(photoResult);
 }
@@ -473,14 +495,11 @@ function calculateFoodResult() {
   }
 
   const matched = findFoodProfile(value);
-  const profile = matched || {
-    icon: "🔎",
-    title: "Analisis umum",
-    effect: "Makanan ini belum ada di database. Risiko biasanya meningkat bila makanan sering manis, asam, lengket, atau mudah terselip.",
-    tip: "Masukkan nama yang lebih sederhana atau perhatikan kandungan gula, keasaman, dan seberapa sering dikonsumsi.",
-    traits: ["belum dikenali"],
-    baseRisk: 35
-  };
+  if (!matched) {
+    analyzeFoodAI();
+    return;
+  }
+  const profile = matched;
 
   const frequencyModifier = {
     jarang: -4,
@@ -503,21 +522,21 @@ function calculateFoodResult() {
     )
   );
 
-  let level = "Risiko rendah";
+  let level = "Dampak relatif rendah";
   let levelClass = "low";
 
   if (score >= 75) {
-    level = "Risiko sangat tinggi";
+    level = "Dampak relatif sangat tinggi";
     levelClass = "very-high";
   } else if (score >= 55) {
-    level = "Risiko tinggi";
+    level = "Dampak relatif tinggi";
     levelClass = "high";
   } else if (score >= 35) {
-    level = "Risiko sedang";
+    level = "Dampak relatif sedang";
     levelClass = "medium";
   }
 
-  renderFoodResult(profile, Boolean(matched), score, level, levelClass);
+  renderFoodResult(foodInput.value.trim(), profile, score, level, levelClass);
 }
 
 function handleFoodAnalyze() {
@@ -525,7 +544,7 @@ function handleFoodAnalyze() {
 
   if (value.length < 2) {
     foodResultBox.innerHTML = `
-      <p><strong>Ketik dulu</strong> nama makanan, minuman, atau benda — minimal 2 huruf — baru klik Analisa.</p>
+      <p><strong>Masukkan dulu</strong> makanan, minuman, atau kebiasaan yang ingin kamu cek — minimal 2 huruf.</p>
     `;
     show(foodResultBox);
     return;
@@ -540,60 +559,44 @@ function handleFoodAnalyze() {
   analyzeFoodAI();
 }
 
-function renderFoodResult(profile, known, score, level, levelClass) {
-  const traits = profile.traits
-    .map((trait) => `<span>${trait}</span>`)
-    .join("");
-  const searchValue = escapeHtml(foodInput.value.trim());
-  const aiFallback = known ? "" : `
-    <div class="food-ai-fallback">
-      <p>🔍 "<strong>${searchValue}</strong>" belum ada di database. Mau AI hy3:free yang analisa + kasih skor bahaya?</p>
-      <button type="button" id="food-ai-fallback-btn">✨ Analisa "${searchValue}" dengan AI</button>
-    </div>
-  `;
-
+function renderFoodResult(value, profile, score, level, levelClass) {
   foodResultBox.innerHTML = `
-    <div class="food-result-head">
-      <span>${profile.icon}</span>
-      <div>
-        <small>${known ? "Kategori ditemukan" : "Belum ada data khusus"}</small>
-        <h3>${profile.title}</h3>
-      </div>
-    </div>
-    <div class="risk-row">
-      <div>
-        <strong>Perkiraan dampak:</strong>
-        <span class="risk-label ${levelClass}">${level}</span>
-      </div>
-      <div class="risk-meter" aria-label="Skor perkiraan risiko ${score} dari 100">
-        <span class="${levelClass}" style="width: ${score}%"></span>
-      </div>
-    </div>
-    <div class="trait-list">${traits}</div>
-    <p><strong>Efek ke gigi:</strong> ${profile.effect}</p>
-    <p><strong>Saran:</strong> ${profile.tip}</p>
-    ${aiFallback}
-    <p class="result-note">
-      Skor ini adalah perkiraan edukasi berdasarkan jenis makanan dan
-      kebiasaan konsumsi, bukan pemeriksaan atau diagnosis dokter gigi.
+    <p class="result-eyebrow">Hasil analisis</p>
+    <h3 class="result-item">${escapeHtml(value)}</h3>
+    <p class="result-status">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>
+      Analisis selesai
     </p>
+    <div class="score-card">
+      <div class="score-circle ${levelClass}">${score}</div>
+      <div class="score-body">
+        <strong class="score-risk ${levelClass}">${level}</strong>
+        <p class="score-line">Skor indikatif: ${score}/100</p>
+        <p class="score-hint">Semakin tinggi skor, semakin besar potensi dampaknya pada gigi.</p>
+        <div class="risk-meter score-meter" aria-label="Skor dampak ${score} dari 100">
+          <span class="${levelClass}" style="width: ${score}%"></span>
+        </div>
+      </div>
+    </div>
+    <section class="result-section"><h4>Efek pada gigi</h4><p>${escapeHtml(profile.effect)}</p></section>
+    <section class="result-section"><h4>Saran</h4><p>${escapeHtml(profile.tip)}</p></section>
+    <section class="result-about">
+      <h4>Tentang hasil ini</h4>
+      <p>Penilaian dibuat berdasarkan informasi yang kamu masukkan. Hasil ini bersifat edukatif dan bukan diagnosis dokter gigi.</p>
+    </section>
   `;
 
+  foodResultBox.classList.remove("anim-in");
+  void foodResultBox.offsetWidth;
+  foodResultBox.classList.add("anim-in");
   show(foodResultBox);
-
-  if (!known) {
-    const fallbackBtn = document.getElementById("food-ai-fallback-btn");
-    if (fallbackBtn) {
-      fallbackBtn.addEventListener("click", analyzeFoodAI);
-    }
-  }
 }
 
 const FOOD_AI_STEPS = [
-  "AI membaca input kamu…",
-  "AI mengecek bahaya ke gigi…",
-  "AI menyusun skor 0-100…",
-  "AI menulis saran aman…"
+  "Memeriksa input kamu…",
+  "Menilai pengaruh ke gigi…",
+  "Menyusun estimasi risiko…",
+  "Menyiapkan saran…"
 ];
 
 let foodAiStepTimer = null;
@@ -608,23 +611,19 @@ function showFoodThinking() {
   let stepIndex = 0;
 
   foodResultBox.innerHTML = `
-    <div class="food-result-head">
-      <span>🤖</span>
+    <div class="food-result-head food-result-head-plain">
       <div>
-        <small>AI hy3:free</small>
-        <h3>Makanan sedang dianalisa…</h3>
+        <small>Memeriksa…</small>
+        <h3>"${escapeHtml(foodInput.value.trim())}" sedang dicek</h3>
       </div>
     </div>
     <div class="ai-scan food-thinking" aria-hidden="true">
-      <div class="ai-orbs"><i></i><i></i><i></i></div>
-      <div class="ai-ring"></div>
-      <div class="ai-ring delay"></div>
       <div class="ai-scan-bar"></div>
-      <span class="ai-tooth">🍎</span>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1E7195" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     </div>
     <p id="food-ai-step" class="ai-step-text loading">${FOOD_AI_STEPS[0]}</p>
     <div class="risk-meter ai-progress-track"><span class="medium ai-progress"></span></div>
-    <p class="result-note">AI sedang menilai bahaya ke gigi + menyusun skor 0-100. Jangan tutup halaman ini.</p>
+    <p class="result-note">Jangan tutup halaman ini. Biasanya selesai dalam beberapa detik.</p>
   `;
   show(foodResultBox);
 
@@ -643,11 +642,11 @@ function showFoodThinking() {
 }
 
 function foodRiskLevel(score) {
-  if (score == null) return { label: "Selesai dianalisa", levelClass: "medium" };
-  if (score <= 20) return { label: "Risiko rendah", levelClass: "low" };
-  if (score < 40) return { label: "Risiko sedang", levelClass: "medium" };
-  if (score < 70) return { label: "Risiko tinggi", levelClass: "high" };
-  return { label: "Risiko sangat tinggi", levelClass: "very-high" };
+  if (score == null) return { label: "Selesai dianalisis", levelClass: "medium" };
+  if (score <= 20) return { label: "Dampak relatif rendah", levelClass: "low" };
+  if (score < 40) return { label: "Dampak relatif sedang", levelClass: "medium" };
+  if (score < 70) return { label: "Dampak relatif tinggi", levelClass: "high" };
+  return { label: "Dampak relatif sangat tinggi", levelClass: "very-high" };
 }
 
 function parseFoodAi(text) {
@@ -665,7 +664,16 @@ function parseFoodAi(text) {
   };
 }
 
-function renderFoodAiReport(value, dbProfile, dbKnown, aiResult, aiScore) {
+function foodAdviceList(html) {
+  const parts = String(html || "")
+    .split(/<br\s*\/?>/i)
+    .map((part) => part.replace(/^[•\-\d.)\s]+/, "").trim())
+    .filter(Boolean);
+  if (parts.length <= 1) return null;
+  return `<ul class="advice-list">${parts.map((part) => `<li>${part}</li>`).join("")}</ul>`;
+}
+
+function renderFoodAiReport(value, aiResult, aiScore, aiSourceNote) {
   const level = foodRiskLevel(aiScore);
   const parsed = parseFoodAi(aiResult);
   const safeValue = escapeHtml(value);
@@ -675,40 +683,39 @@ function renderFoodAiReport(value, dbProfile, dbKnown, aiResult, aiScore) {
   const saranHtml = parsed.saran
     ? escapeHtml(parsed.saran).replace(/\n/g, "<br>")
     : "";
+  const saranList = foodAdviceList(saranHtml);
   const saranBlock = saranHtml
-    ? `<div class="ai-section"><h4>💡 Saran biar aman</h4><p>${saranHtml}</p></div>`
+    ? `<section class="result-section"><h4>Saran</h4>${saranList || `<p>${saranHtml}</p>`}</section>`
     : "";
-  const dbText = dbKnown
-    ? `${dbProfile.title} — ${dbProfile.effect}`
-    : "belum ada di database, jadi penilaian penuh dari AI.";
+  const sourceNote = aiSourceNote
+    ? `<p class="source-note">Sumber analisis: estimasi AI.</p>`
+    : "";
 
   foodResultBox.innerHTML = `
-    <div class="food-result-head">
-      <span>🤖</span>
-      <div>
-        <small>Hasil AI hy3:free · "${safeValue}"</small>
-        <h3>Analisa selesai</h3>
-      </div>
-    </div>
-    <div class="food-ai-score-hero ${level.levelClass}">
-      <div class="score-circle ${level.levelClass}">${aiScore == null ? "?" : aiScore}</div>
-      <div class="score-meta">
-        <small>Skor bahaya ke gigi · 0 aman – 100 bahaya</small>
-        <strong><span class="risk-label ${level.levelClass}">${aiScore == null ? level.label : aiScore + "/100 · " + level.label}</span></strong>
-      </div>
-    </div>
-    <div class="risk-meter" aria-label="Skor bahaya AI ${aiScore == null ? "" : aiScore + " dari 100"}">
-      <span class="${level.levelClass}" style="width: ${aiScore == null ? 100 : aiScore}%"></span>
-    </div>
-    <div class="ai-sections">
-      <div class="ai-section"><h4>🦷 Efek ke gigi</h4><p>${efekHtml}</p></div>
-      ${saranBlock}
-      <div class="ai-section db"><h4>📚 Database</h4><p>${escapeHtml(dbText)}</p></div>
-    </div>
-    <p class="result-note">
-      <strong>Ini edukasi, bukan diagnosis dokter gigi.</strong>
-      Skor 0 = aman, 100 = sangat berbahaya bagi gigi.
+    <p class="result-eyebrow">Hasil analisis</p>
+    <h3 class="result-item">${safeValue}</h3>
+    <p class="result-status">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>
+      Analisis selesai
     </p>
+    <div class="score-card">
+      <div class="score-circle ${level.levelClass}">${aiScore == null ? "?" : aiScore}</div>
+      <div class="score-body">
+        <strong class="score-risk ${level.levelClass}">${level.label}</strong>
+        <p class="score-line">Skor indikatif: ${aiScore == null ? "—" : aiScore + "/100"}</p>
+        <p class="score-hint">Semakin tinggi skor, semakin besar potensi dampaknya pada gigi.</p>
+        <div class="risk-meter score-meter" aria-label="Skor dampak ${aiScore == null ? "" : aiScore + " dari 100"}">
+          <span class="${level.levelClass}" style="width: ${aiScore == null ? 100 : aiScore}%"></span>
+        </div>
+      </div>
+    </div>
+    <section class="result-section"><h4>Efek pada gigi</h4><p>${efekHtml}</p></section>
+    ${saranBlock}
+    <section class="result-about">
+      <h4>Tentang hasil ini</h4>
+      <p>Penilaian dibuat berdasarkan informasi yang kamu masukkan. Hasil ini bersifat edukatif dan bukan diagnosis dokter gigi.</p>
+      ${sourceNote}
+    </section>
   `;
   foodResultBox.classList.remove("anim-in");
   void foodResultBox.offsetWidth;
@@ -722,7 +729,7 @@ async function analyzeFoodAI() {
 
   if (value.length < 2) {
     foodResultBox.innerHTML = `
-      <p><strong>Ketik dulu</strong> nama makanan, minuman, atau benda — minimal 2 huruf — baru klik ✨ Analisa AI.</p>
+      <p><strong>Masukkan dulu</strong> makanan, minuman, atau kebiasaan yang ingin kamu cek — minimal 2 huruf.</p>
     `;
     show(foodResultBox);
     return;
@@ -732,7 +739,7 @@ async function analyzeFoodAI() {
   foodAiLoading = true;
   if (button) {
     button.disabled = true;
-    button.textContent = "⏳ AI thinking…";
+    button.textContent = "Memeriksa…";
   }
   showFoodThinking();
 
@@ -765,13 +772,11 @@ async function analyzeFoodAI() {
     }
 
     if (!response.ok) {
-      throw new Error(data.error || "AI makanan gagal menjawab.");
+      throw new Error(data.error || "Pemeriksaan gagal. Coba lagi.");
     }
 
     stopFoodThinking();
-    const matched = findFoodProfile(value);
-    const fallbackProfile = matched || { title: "Belum ada data", effect: "AI yang menilai penuh." };
-    renderFoodAiReport(value, fallbackProfile, Boolean(matched), data.result, data.score);
+    renderFoodAiReport(value, data.result, data.score, true);
   } catch (error) {
     stopFoodThinking();
     const isAbort = error && error.name === "AbortError";
@@ -779,51 +784,45 @@ async function analyzeFoodAI() {
       error instanceof TypeError ||
       String((error && error.message) || "").includes("Failed to fetch");
     const message = isAbort
-      ? "AI kelamaan jawab (timeout 65 detik). Coba lagi."
+      ? "Pemeriksaan memakan waktu terlalu lama. Coba lagi."
       : isFetchFail
-        ? "Tidak bisa nyambung ke server. Pastikan localhost:3000 nyala (node server.js) kalau buka lokal, atau tunggu redeploy Vercel selesai."
+        ? "Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi."
         : error.message || "Coba lagi.";
     foodResultBox.innerHTML = `
-      <div class="food-result-head">
-        <span>⚠️</span>
+      <div class="food-result-head food-result-head-plain">
         <div>
           <small>Gagal</small>
-          <h3>AI gagal menjawab</h3>
+          <h3>Tidak bisa menampilkan hasil</h3>
         </div>
       </div>
       <p>${escapeHtml(message)}</p>
-      <p class="result-note">Hasil database tetap muncul otomatis saat kamu mengetik di kolom.</p>
     `;
     show(foodResultBox);
   } finally {
     foodAiLoading = false;
     if (button) {
       button.disabled = false;
-      button.textContent = "✨ Analisa AI + Skor";
+      button.textContent = "Cek efek";
     }
   }
 }
 
 function renderBasicImpacts() {
   const container = document.getElementById("basic-impact-list");
+  container.innerHTML = "";
 
   window.basicFoodImpacts.forEach(function (item) {
-    const article = document.createElement("article");
-    article.className = `basic-impact ${item.tone}`;
+    const row = document.createElement("div");
+    row.className = "food-example";
 
-    const icon = document.createElement("span");
-    icon.textContent = item.icon;
-
-    const content = document.createElement("div");
-    const title = document.createElement("h3");
+    const title = document.createElement("h4");
     const description = document.createElement("p");
 
     title.textContent = item.name;
     description.textContent = item.impact;
 
-    content.append(title, description);
-    article.append(icon, content);
-    container.append(article);
+    row.append(title, description);
+    container.append(row);
   });
 }
 
@@ -884,9 +883,9 @@ function initTypewriter() {
   if (!target) return;
 
   const phrases = [
-    "Rawat gigi, rawat hal yang paling penting",
-    "Senyum sehat dimulai dari gigi bersih",
-    "Cek gigi dengan AI, jaga tiap hari"
+    "Rawat kesehatan gigi dengan lebih mudah.",
+    "Senyum sehat dimulai dari gigi bersih.",
+    "Cek gigi dan makanan dengan AI."
   ];
 
   let phraseIndex = 0;
